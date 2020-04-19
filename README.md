@@ -20,8 +20,8 @@ Controller App for https://github.com/Ruud14/DIY-Wifi-LEDStrip-Controller
 - You will probably get a warning since you're downloading from an unknown source. It'll ask you to enable unknown sources in your settings.
 - Continue the installation and you are ready to go.
 
-![Screens1]()
-![Screens2]()
+![Screens1](https://github.com/Ruud14/Wifi-LEDStrip-Controller-App/blob/master/pictures/Screens1.jpg)
+![Screens2](https://github.com/Ruud14/Wifi-LEDStrip-Controller-App/blob/master/pictures/Screens2.jpg)
 
 
 ### Additional info.
