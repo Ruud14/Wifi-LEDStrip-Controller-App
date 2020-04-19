@@ -24,14 +24,29 @@ class LedStrip
         'name': name,
       };
 
-
   void sendConfigurationToStrip() async
   {
-    print("Sending ${this.configuration.conf.join(";").replaceAll(' ', '')} to ${this.ip}.");
+    await this.sendMSG(this.configuration.conf.join(";").replaceAll(' ', ''));
+  }
+  void turnOff() async
+  {
+    await this.sendMSG("off");
+  }
+  void restart() async
+  {
+    await this.sendMSG("restart");
+  }
+  void reset() async
+  {
+    await this.sendMSG("reset");
+  }
+  void sendMSG(String what) async
+  {
+    print("Sending $what message to ${this.ip}.");
     await Socket.connect(this.ip, dataPort).then((socket) {
       print('Connected to: '
           '${socket.remoteAddress.address}:${socket.remotePort}');
-      socket.write(this.configuration.conf.join(";").replaceAll(' ', ''));
+      socket.write(what);
       socket.destroy();
     });
   }

@@ -17,7 +17,8 @@ class _StripControlState extends State<StripControl> {
   Map data;
   LedStrip strip;
   Function deleteFunc;
-  Function rebootFunc;
+  bool turnedOff = false;
+  GlobalKey<ScaffoldState> scaffoldKey;
   List<String> stripNames = [];
 
   // Populates 'stripNames' with the names from all the strips from the storage.
@@ -58,7 +59,7 @@ class _StripControlState extends State<StripControl> {
     data = ModalRoute.of(context).settings.arguments;
     strip = data['strip'];
     deleteFunc = data['deleteFunc'];
-    rebootFunc = data['rebootFunc'];
+    scaffoldKey = data['scaffoldKey'];
 
     return Scaffold(
       appBar: AppBar(
@@ -68,7 +69,7 @@ class _StripControlState extends State<StripControl> {
             icon: Icon(Icons.arrow_back),
             onPressed: () async
               {
-                Navigator.pop(context, strip);
+                Navigator.pop(context, [strip,turnedOff]);
               }
         ),
       ),
@@ -133,7 +134,7 @@ class _StripControlState extends State<StripControl> {
             SizedBox(height: 80,),
             RaisedButton(
               onPressed: () {
-                Navigator.pop(context, strip);
+                Navigator.pop(context,  [strip,turnedOff]);
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -150,12 +151,47 @@ class _StripControlState extends State<StripControl> {
             Container(
                 width: MediaQuery.of(context).size.width/2,
                 alignment: Alignment.center,
+                child: Text("Turn off the strip controller:", textAlign: TextAlign.center,)),
+            SizedBox(height: 10,),
+            RaisedButton(
+              onPressed: () async {
+                turnedOff = true;
+                Navigator.pop(context,  [strip,turnedOff]);
+                try {
+                  await strip.turnOff();
+                  scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Off message sent to ${strip.name}.")));
+                }
+                catch (e) {
+                  scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Couldn't send Off message to ${strip.name}.")));
+                }
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Icon(Icons.power_settings_new, color: Colors.black,),
+                  SizedBox(width: 5,),
+                  Text("Turn off", style: TextStyle(color: Colors.black),),
+                ],
+              ),
+              color: Colors.amber,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
+            ),
+            SizedBox(height: 20,),
+            Container(
+                width: MediaQuery.of(context).size.width/2,
+                alignment: Alignment.center,
                 child: Text("Reboot the strip controller:", textAlign: TextAlign.center,)),
             SizedBox(height: 10,),
             RaisedButton(
-              onPressed: () {
-                Navigator.pop(context, strip);
-                rebootFunc();
+              onPressed: () async {
+                Navigator.pop(context,  [strip,turnedOff]);
+                try {
+                  await strip.restart();
+                  scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Reboot message sent to ${strip.name}.")));
+                }
+                catch (e) {
+                  scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Couldn't send reboot message to ${strip.name}.")));
+                }
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -176,7 +212,7 @@ class _StripControlState extends State<StripControl> {
             SizedBox(height: 10,),
             RaisedButton(
               onPressed: () {
-                Navigator.pop(context, strip);
+                Navigator.pop(context,  [strip,turnedOff]);
                 deleteFunc();
               },
               child: Row(

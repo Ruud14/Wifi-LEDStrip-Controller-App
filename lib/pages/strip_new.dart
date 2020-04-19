@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:ledstripcontroller/ledstrip.dart';
 import 'package:flutter/services.dart';
@@ -75,15 +78,18 @@ class _StripNewState extends State<StripNew> {
   }
 
   // Sends the wifi credentials to the strip so It can connect to the wifi.
-  void configureStrip() async
+  void configureStrip(Function callback) async
   {
-    await Socket.connect(stripIP, 7777).then((socket) async {
-      String stripHostname = "STRIP_${stripName.replaceAll(" ", "_")}";
-      print('Connected to: '
-          '${socket.remoteAddress.address}:${socket.remotePort}');
-       socket.write("$wifiSSID,$wifiPassword,$stripHostname");
-      socket.destroy();
-      });
+    String stripHostname = "STRIP_${stripName.replaceAll(" ", "_")}";
+    Socket _socket;
+    _socket = await Socket.connect(stripIP, 7777);
+    _socket.listen((List<int> event) {
+      String message = utf8.decode(event);
+      callback(message);
+      _socket.close();
+      _socket.destroy();
+    });
+    _socket.add(utf8.encode("$wifiSSID,$wifiPassword,$stripHostname"));
   }
 
   @override
@@ -122,131 +128,107 @@ class _StripNewState extends State<StripNew> {
           ),
         ),
         body: SingleChildScrollView(
-          child: Column(
-            children: <Widget>[
-              SizedBox(height: 20,),
-              Container(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                SizedBox(height: 20,),
+                Container(
+                    width: MediaQuery.of(context).size.width/2,
+                    alignment: Alignment.bottomLeft,
+                    child: Text("Name:", textAlign: TextAlign.left,)),
+                Container(
                   width: MediaQuery.of(context).size.width/2,
-                  alignment: Alignment.bottomLeft,
-                  child: Text("Name:", textAlign: TextAlign.left,)),
-              Container(
-                width: MediaQuery.of(context).size.width/2,
-                child: TextFormField(
-                  initialValue: "New Strip",
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(15),
-                  ],
-                  onChanged: (String value) {
-                    setState(() {
-                      changeStripName(value);
-                    });
-                  },
+                  child: TextFormField(
+                    initialValue: "New Strip",
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(15),
+                    ],
+                    onChanged: (String value) {
+                      setState(() {
+                        changeStripName(value);
+                      });
+                    },
+                  ),
                 ),
-              ),
-              SizedBox(height: 20,),
-              Container(
+                SizedBox(height: 20,),
+                Container(
+                    width: MediaQuery.of(context).size.width/2,
+                    alignment: Alignment.bottomLeft,
+                    child: Text("Password of the '$wifiSSID' wifi network:", textAlign: TextAlign.left,)),
+                Container(
                   width: MediaQuery.of(context).size.width/2,
-                  alignment: Alignment.bottomLeft,
-                  child: Text("Password of the '$wifiSSID' wifi network:", textAlign: TextAlign.left,)),
-              Container(
-                width: MediaQuery.of(context).size.width/2,
-                child: TextFormField(
-                  initialValue: "",
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(100),
-                  ],
-                  onChanged: (String value) {
-                    setState(() {
-                      wifiPassword = value;
-                    });
-                  },
+                  child: TextFormField(
+                    initialValue: "",
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(100),
+                    ],
+                    onChanged: (String value) {
+                      setState(() {
+                        wifiPassword = value;
+                      });
+                    },
+                  ),
                 ),
-              ),
-              SizedBox(height: 20,),
-              RaisedButton(
-                onPressed: () async {
-                  showDialog(
-                      barrierDismissible: false,
-                      context: context,
-                      child: AlertDialog(
-                        content: Text("Configuring strip. This can take up to 5 minutes. Please wait..."),
-                      ));
-                  // Send the wifi credentials to the strip.
-                  await configureStrip();
-                  // connect to the wifi again.
-                  WifiConnectionStatus connectionStatus = await WifiConfiguration.connectToWifi(wifiSSID, wifiPassword, "com.example.ledstripcontroller");
-                  await Future.delayed(Duration(milliseconds: 10000));
-                  if(connectionStatus == WifiConnectionStatus.connected)
-                  {
-                    // Fires after the strip has been found on the wifi network.
-                    void addStrip(addr) async
+                SizedBox(height: 20,),
+                RaisedButton(
+                  onPressed: () async {
+                    showDialog(
+                        barrierDismissible: false,
+                        context: context,
+                        child: AlertDialog(
+                          content: Text("Configuring strip. This can take up to 5 minutes. Please wait..."),
+                        ));
+                    // Send the wifi credentials to the strip.
+                    void afterStripConnected(String ip) async
                     {
-                      print("GOT STRIP:: "+addr.ip);
-                      Storage storage = Storage();
-                      await storage.setup();
-                      await storage.appendStripsFile(LedStrip(name: stripName, ip: addr.ip));
-                      Navigator.pop(context); // Removes the dialog
-                      Navigator.pop(context); // Removes strip_new
-                      Navigator.pop(context); // Removes strip_add
-                    }
-
-                    await getSavedStrips();
-                    final String ip = await Wifi.ip;
-                    final String subnet = ip.substring(0, ip.lastIndexOf('.'));
-                    final int port = 8778;
-                    final stream = NetworkAnalyzer.discover(subnet, port);
-                    var streamer;
-                    streamer = stream.listen((NetworkAddress addr) async {
-                      print("IN STREAM "+addr.ip);
-                      if (addr.exists) {
-                        print('Found device: ${addr.ip}');
-                        if(strips.length == 0)
+                      if(ip == "failed")
                         {
-                          addStrip(addr);
-                          streamer.cancel();
+                          _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("The strip couldn't connect to wifi. Did you enter the wrong wifi password?")));
+                          Navigator.pop(context); // Removes the dialog
                         }
-                        else{
-                          for(int i=0; i< strips.length; i++)
+                      else
+                        {
+                          // connect to the wifi again.
+                          WifiConnectionStatus connectionStatus = await WifiConfiguration.connectToWifi(wifiSSID, wifiPassword, "com.example.ledstripcontroller");
+
+                          // Add the strip to storage
+                          Storage storage = Storage();
+                          await storage.setup();
+                          await storage.appendStripsFile(LedStrip(name: stripName, ip: ip));
+                          Navigator.pop(context); // Removes the dialog
+                          Navigator.pop(context); // Removes strip_new
+                          Navigator.pop(context); // Removes strip_add
+
+                          if(connectionStatus == WifiConnectionStatus.connected)
                           {
-                            if(strips[i].ip != addr.ip)
-                            {
-                              addStrip(addr);
-                              streamer.cancel();
-                            }
+                          }
+                          else
+                          {
+                            _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Couldn't connect back to wifi.")));
+                            Navigator.pop(context); // Removes dialog
+                            await Future.delayed(Duration(milliseconds: 7000));
+                            Navigator.pop(context); // Removes strip_new
                           }
                         }
-                      }
-                      else if(addr.ip.endsWith("255"))
-                      {
-                        _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Strip couldn't be found on the network. Did you enter the correct wifi password?")));
-                        await Future.delayed(Duration(milliseconds: 7000));
-                        Navigator.pop(context); // Removes dialog
-                        Navigator.pop(context); // Removes strip_new
-                      }
-                    });
-                  }
-                  else
-                    {
-                      _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Couldn't connect back to wifi. Did you enter the correct wifi password?")));
-                      await Future.delayed(Duration(milliseconds: 7000));
-                      Navigator.pop(context); // Removes dialog
-                      Navigator.pop(context); // Removes strip_new
                     }
+                    await configureStrip(afterStripConnected);
 
-                },
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Icon(Icons.save, color: Colors.black,),
-                    SizedBox(width: 5,),
-                    Text("Save", style: TextStyle(color: Colors.black),),
-                  ],
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Icon(Icons.save, color: Colors.black,),
+                      SizedBox(width: 5,),
+                      Text("Save", style: TextStyle(color: Colors.black),),
+                    ],
+                  ),
+                  color: Colors.amber,
+                  padding: EdgeInsets.symmetric(horizontal: 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
                 ),
-                color: Colors.amber,
-                padding: EdgeInsets.symmetric(horizontal: 50),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );

@@ -70,14 +70,8 @@ void deleteStrip(String initialName) async
       // Send a reset message to the strips that are removed from storage.
       else
         {
-          print("Sending reset message to ${savedStrips[i].ip}.");
-          Socket.connect(savedStrips[i].ip, dataPort).then((socket) {
-            print('Connected to: '
-                '${socket.remoteAddress.address}:${socket.remotePort}');
-            socket.write("reset");
-            socket.destroy();
-          });
-      }
+          savedStrips[i].reset();
+        }
     }
   });
   // Remove the strip from every group that it is part of.

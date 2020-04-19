@@ -16,7 +16,9 @@ class _GroupControlState extends State<GroupControl> {
 
   Map data;
   Group group;
+  bool turnedOff = false;
   List<String> groupNames = [];
+  GlobalKey<ScaffoldState> scaffoldKey;
 
   // Populates 'groupNames' with the names from all the groups from the storage.
   void getAllGroupNames() async
@@ -55,6 +57,7 @@ class _GroupControlState extends State<GroupControl> {
   Widget build(BuildContext context) {
     data = ModalRoute.of(context).settings.arguments;
     group = data['group'];
+    scaffoldKey = data['scaffoldKey'];
 
     return Scaffold(
       appBar: AppBar(
@@ -64,7 +67,7 @@ class _GroupControlState extends State<GroupControl> {
             icon: Icon(Icons.arrow_back),
             onPressed: () async
             {
-              Navigator.pop(context, group);
+              Navigator.pop(context, [group,turnedOff]);
             }
         ),
       ),
@@ -137,10 +140,10 @@ class _GroupControlState extends State<GroupControl> {
                 ),
               ),
             ),
-            SizedBox(height: 50,),
+            SizedBox(height: 20,),
             RaisedButton(
               onPressed: () {
-                Navigator.pop(context, group);
+                Navigator.pop(context, [group,turnedOff]);
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -148,6 +151,69 @@ class _GroupControlState extends State<GroupControl> {
                   Icon(Icons.save, color: Colors.black,),
                   SizedBox(width: 5,),
                   Text("Apply", style: TextStyle(color: Colors.black),),
+                ],
+              ),
+              color: Colors.amber,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
+            ),
+            SizedBox(height: 20,),
+            Container(
+                width: MediaQuery.of(context).size.width/2,
+                alignment: Alignment.center,
+                child: Text("Turn off the strip controllers:", textAlign: TextAlign.center,)),
+            SizedBox(height: 10,),
+            RaisedButton(
+              onPressed: () async {
+                turnedOff = true;
+                Navigator.pop(context, [group,turnedOff]);
+                for(int i=0; i< group.strips.length; i++)
+                  {
+                    try {
+                      await group.strips[i].turnOff();
+                      scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Off message sent to ${group.strips[i].name}.")));
+                    }
+                    catch (e) {
+                      scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Couldn't send Off message to ${group.strips[i].name}.")));
+                    }
+                  }
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Icon(Icons.power_settings_new, color: Colors.black,),
+                  SizedBox(width: 5,),
+                  Text("Turn off", style: TextStyle(color: Colors.black),),
+                ],
+              ),
+              color: Colors.amber,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
+            ),
+            SizedBox(height: 20,),
+            Container(
+                width: MediaQuery.of(context).size.width/2,
+                alignment: Alignment.center,
+                child: Text("Reboot the strip controllers:", textAlign: TextAlign.center,)),
+            SizedBox(height: 10,),
+            RaisedButton(
+              onPressed: () async {
+                Navigator.pop(context, [group,turnedOff]);
+                for(int i=0; i< group.strips.length; i++)
+                  {
+                    try {
+                      await group.strips[i].restart();
+                      scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Reboot message sent to ${group.strips[i].name}.")));
+                    }
+                    catch (e) {
+                      scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Couldn't send reboot message to ${group.strips[i].name}.")));
+                    }
+                  }
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Icon(Icons.refresh, color: Colors.black,),
+                  SizedBox(width: 5,),
+                  Text("Restart", style: TextStyle(color: Colors.black),),
                 ],
               ),
               color: Colors.amber,

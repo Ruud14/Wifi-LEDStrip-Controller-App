@@ -567,7 +567,7 @@ class _CantConnectToStripDialogState extends State<CantConnectToStripDialog> {
       content: Container(
         width: MediaQuery.of(context).size.width-20,
         height: MediaQuery.of(context).size.height/4,
-        child: Text("Coudn't connect to strip. Make sure you and the strip a close enough to a wifi access point and you are close enough to the strip.")
+        child: Text("Couldn't connect to strip. Make sure you and the strip a close enough to a wifi access point and you are close enough to the strip. Removing power from the strip for a few seconds might help as well.")
       ),
       actions: <Widget>[
         FlatButton(

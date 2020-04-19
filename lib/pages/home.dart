@@ -180,23 +180,6 @@ class _HomeState extends State<Home> {
                               });
                             }
                         );
-                      },
-                          rebootFunc: () async {
-                        try
-                          {
-                            print("Sending restart message to ${entry.value.ip}.");
-                            await Socket.connect(entry.value.ip, dataPort).then((socket) {
-                              print('Connected to: '
-                                  '${socket.remoteAddress.address}:${socket.remotePort}');
-                              socket.write("restart");
-                              socket.destroy();
-                              _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Reboot message sent to ${entry.value.name}.")));
-                            });
-                          }
-                        catch(e)
-                          {
-                            _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Couldn't send reboot message to ${entry.value.name}.")));
-                          }
                       });
                     }).toList(),
                   ),

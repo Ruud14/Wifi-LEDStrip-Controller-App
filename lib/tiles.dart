@@ -13,10 +13,9 @@ class StripTile extends StatefulWidget {
 
   LedStrip strip;
   Function deleteFunc;
-  Function rebootFunc;
   GlobalKey<ScaffoldState> scaffoldKey;
   bool online;
-  StripTile({this.strip, this.deleteFunc, this.rebootFunc, this.scaffoldKey});
+  StripTile({this.strip, this.scaffoldKey, this.deleteFunc});
 
   @override
   _StripTileState createState() => _StripTileState();
@@ -82,24 +81,31 @@ class _StripTileState extends State<StripTile> {
         {
           String start_name = widget.strip.name;
           String start_conf_name = widget.strip.configuration.name;
-          dynamic result = await Navigator.pushNamed(context, '/strip_control', arguments: {'strip': widget.strip, 'deleteFunc': widget.deleteFunc, 'rebootFunc':widget.rebootFunc});
-          // Only apply the configuration if the configuration changed.
-          if (!(start_conf_name == result.configuration.name)){
-            try
+          dynamic result = await Navigator.pushNamed(context, '/strip_control', arguments: {'strip': widget.strip, 'scaffoldKey':widget.scaffoldKey, 'deleteFunc': widget.deleteFunc});
+
+          bool turnedOff = result[1];
+          result = result[0];
+          // Only change anything if the strip is on.
+          if(!turnedOff)
             {
-              widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Sending new congiruation to ${widget.strip.name}.")));
-              await result.sendConfigurationToStrip();
-              widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("The configuration of ${widget.strip.name} has succesfully been sent. The strip might not update immediately.")));
               await updateSavedStrip(start_name, result);
-            }
-            catch(e)
-            {
-              widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Sending new configuration to ${widget.strip.name} failed. Is the strip connected to the wifi?")));
+              // Only apply the configuration if the configuration changed.
+              if (!(start_conf_name == result.configuration.name)){
+                try
+                {
+                  widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Sending new congiruation to ${widget.strip.name}.")));
+                  await result.sendConfigurationToStrip();
+                  widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("The configuration of ${widget.strip.name} has succesfully been sent. The strip might not update immediately.")));
+                }
+                catch(e)
+                {
+                  widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Sending new configuration to ${widget.strip.name} failed. Is the strip connected to the wifi?")));
+                }
+              }
+              setState(() {
+              });
             }
           }
-          setState(() {
-          });
-        },
       ),
     );
   }
@@ -311,26 +317,34 @@ class _GroupTileState extends State<GroupTile> {
         {
           String start_name = widget.group.name;
           String start_conf_name = widget.group.configuration.name;
-          dynamic result = await Navigator.pushNamed(context, '/group_control', arguments: {'group': widget.group});
-          await updateSavedGroup(start_name, result);
+          dynamic result = await Navigator.pushNamed(context, '/group_control', arguments: {'group': widget.group, 'scaffoldKey':widget.scaffoldKey});
+          bool turnedOff = result[1];
+          result = result[0];
+          // Only change anything if the strip is on.
+          if(!turnedOff)
+            {
+              await updateSavedGroup(start_name, result);
 
-          if(!(start_conf_name == result.configuration.name))
-            widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Sending new congiruation to all strips in ${result.name}.")));
-            for(int i =0; i < result.strips.length; i++)
-              {
-                try
+              if(!(start_conf_name == result.configuration.name))
                 {
-                  await result.strips[i].sendConfigurationToStrip();
-                  widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("The configuration of ${result.strips[i].name} has succesfully been sent. The strip might not update immediately.")));
+                  widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Sending new congiruation to all strips in ${result.name}.")));
+                  for(int i =0; i < result.strips.length; i++)
+                  {
+                    try
+                    {
+                      await result.strips[i].sendConfigurationToStrip();
+                      widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("The configuration of ${result.strips[i].name} has succesfully been sent. The strip might not update immediately.")));
+                    }
+                    catch(e)
+                    {
+                      widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Sending new configuration to ${result.strips[i].name} failed. Is the strip connected to the wifi?")));
+                    }
+                  }
                 }
-                catch(e)
-                {
-                  widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Sending new configuration to ${result.strips[i].name} failed. Is the strip connected to the wifi?")));
-                }
-              }
-          setState((){
-          });
-        },
+              setState((){
+              });
+            }
+          }
       )
     );
   }
@@ -406,6 +420,7 @@ class _NewStripTileState extends State<NewStripTile> {
               }
             else
               {
+                Navigator.of(context, rootNavigator: true).pop();
                 showDialog(
                     context: context,
                     builder: (BuildContext context) {
