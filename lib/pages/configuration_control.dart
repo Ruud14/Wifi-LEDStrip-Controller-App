@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:collection/collection.dart';
 import 'package:ledstripcontroller/configitem.dart';
 import 'package:ledstripcontroller/dialogs.dart';
 import 'package:ledstripcontroller/storage.dart';
@@ -33,34 +34,38 @@ class _ConfigurationControlState extends State<ConfigurationControl> {
     return a;
   }
 
-  // Applies the configuration to the strip in storage.
+  // Applies the configuration to the strips in storage.
   void applyConfiguration() async
   {
     String originalName = originalConf.name;
+    Function eq = const DeepCollectionEquality().equals;
+    bool configChanged = !eq(originalConf.conf, temporaryConf.conf);
     originalConf.conf = copyList(temporaryConf.conf);
     originalConf.name = temporaryConf.name;
     await updateSavedConfiguration(originalName, temporaryConf);
     Storage storage  = Storage();
     await storage.setup();
-    await storage.getStrips().then((savedStrips) async {
-      for(int i=0; i < savedStrips.length; i++)
+    if(configChanged)
       {
-        if(savedStrips[i].configuration.name == originalName)
-        {
-          try
+        await storage.getStrips().then((savedStrips) {
+          for(int i=0; i < savedStrips.length; i++)
           {
-            _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Sending new congiruation to ${savedStrips[i].name}.")));
-            await savedStrips[i].sendConfigurationToStrip();
-            _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("The configuration of ${savedStrips[i].name} has succesfully been sent. The strip might not update immediately.")));
+            if(savedStrips[i].configuration.name == temporaryConf.name)
+            {
+              try
+              {
+                _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Sending new congiruation to ${savedStrips[i].name}.")));
+                savedStrips[i].sendConfigurationToStrip();
+                _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("The configuration of ${savedStrips[i].name} has succesfully been sent. The strip might not update immediately.")));
+              }
+              catch(e)
+              {
+                _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Sending new configuration to ${savedStrips[i].name} failed. Is the strip connected to the wifi?")));
+              }
+            }
           }
-          catch(e)
-          {
-            _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Sending new configuration to ${savedStrips[i].name} failed. Is the strip connected to the wifi?")));
-          }
-         }
+        });
       }
-    });
-
   }
   // Changes the value of the transition or color in the temporaryConf.
   // Doesn't change anything in storage.

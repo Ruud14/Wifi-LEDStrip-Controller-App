@@ -18,7 +18,7 @@ class _StripAddState extends State<StripAdd> {
   // Populates 'ssidList' with all non-configured strips on the network.
   void loadNetworks() async {
     ssidList = [];
-    Wifi.list('').then((list) {
+    await Wifi.list('').then((list) {
       for(int i=0; i<list.length; i++)
         {
           if(list[i].ssid == "LedStrip Setup")
@@ -78,7 +78,7 @@ class _StripAddState extends State<StripAdd> {
                         Text("No Strips found on network",
                             style: TextStyle(fontSize: 20, fontStyle: FontStyle.italic)),
                         SizedBox(height: 20,),
-                        Text("You might want to go to the wifi settings of your phone, reaload the available networks and come back here.",
+                        Text("You might want to go to the wifi settings of your phone, reaload the available networks (BUT DON'T CONNECT TO ANY) and come back here. ",
                             style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic,),
                             textAlign: TextAlign.center,),
                         SizedBox(height: 20,)

@@ -44,8 +44,8 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
 
-  ScrollController _StripsScrollController = ScrollController();
-  ScrollController _GroupsScrollController = ScrollController();
+  ScrollController _stripsScrollController = ScrollController();
+  ScrollController _groupsScrollController = ScrollController();
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   List<LedStrip> strips = [];
   List<Group> groups = [];
@@ -121,6 +121,16 @@ class _HomeState extends State<Home> {
     await getSavedGroups();
     await getSavedStrips();
     _refreshController.refreshCompleted();
+    _groupsScrollController.animateTo(
+      _groupsScrollController.position.maxScrollExtent+100,
+      curve: Curves.easeOut,
+      duration: const Duration(milliseconds: 500),
+    );
+    _stripsScrollController.animateTo(
+      _stripsScrollController.position.maxScrollExtent+100,
+      curve: Curves.easeOut,
+      duration: const Duration(milliseconds: 500),
+    );
   }
 
   @override
@@ -156,7 +166,7 @@ class _HomeState extends State<Home> {
                   maxHeight: (MediaQuery.of(context).size.height - appBar.preferredSize.height) / 3,
                 ),
                 child: ListView(
-                  controller: _StripsScrollController,
+                  controller: _stripsScrollController,
                   scrollDirection: Axis.vertical,
                     shrinkWrap: true,
                     children: strips.length == 0 ? [
@@ -167,7 +177,7 @@ class _HomeState extends State<Home> {
                         :
                     strips.asMap().entries.map((entry)
                     {
-                      return StripTile(scaffoldKey: _scaffoldKey,strip: entry.value, deleteFunc: () async
+                      return StripTile(scaffoldKey: _scaffoldKey, refreshFunc: _onRefresh ,strip: entry.value, deleteFunc: () async
                       {
                         await showDialog(
                           context: context,
@@ -200,7 +210,7 @@ class _HomeState extends State<Home> {
                   maxHeight: (MediaQuery.of(context).size.height - appBar.preferredSize.height) / 3,
                 ),
                 child: ListView(
-                  controller: _GroupsScrollController,
+                  controller: _groupsScrollController,
                   scrollDirection: Axis.vertical,
                   shrinkWrap: true,
                   children: groups.length == 0 ?
@@ -211,7 +221,7 @@ class _HomeState extends State<Home> {
                       :
                   groups.asMap().entries.map((entry)
                   {
-                    return GroupTile(scaffoldKey: _scaffoldKey, group: entry.value, deleteFunc: () async
+                    return GroupTile(scaffoldKey: _scaffoldKey, refreshFunc: _onRefresh, group: entry.value, deleteFunc: () async
                     {
                       await showDialog(
                         context: context,
@@ -256,8 +266,8 @@ class _HomeState extends State<Home> {
                                 groups.add(Group(name:value));
                               });
                               saveGroups();
-                              _GroupsScrollController.animateTo(
-                                _GroupsScrollController.position.maxScrollExtent+100,
+                              _groupsScrollController.animateTo(
+                                _groupsScrollController.position.maxScrollExtent+100,
                                 curve: Curves.easeOut,
                                 duration: const Duration(milliseconds: 200),
                               );

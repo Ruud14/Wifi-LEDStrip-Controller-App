@@ -71,6 +71,11 @@ class _ConfigurationsPageState extends State<ConfigurationsPage> {
     await Future.delayed(Duration(milliseconds: 100));
     await getSavedConfigurations();
     _refreshController.refreshCompleted();
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent+100,
+      curve: Curves.easeOut,
+      duration: const Duration(milliseconds: 500),
+    );
   }
 
   @override

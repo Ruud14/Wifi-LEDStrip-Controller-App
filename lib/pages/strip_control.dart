@@ -4,7 +4,6 @@ import 'package:ledstripcontroller/ledstrip.dart';
 import 'package:ledstripcontroller/storage.dart';
 import 'package:ledstripcontroller/dialogs.dart';
 import 'package:ledstripcontroller/configuration.dart';
-import 'dart:io';
 
 // Page to make changes to a specific ledstrip.
 class StripControl extends StatefulWidget {

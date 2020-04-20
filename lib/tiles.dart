@@ -13,9 +13,10 @@ class StripTile extends StatefulWidget {
 
   LedStrip strip;
   Function deleteFunc;
+  Function refreshFunc;
   GlobalKey<ScaffoldState> scaffoldKey;
   bool online;
-  StripTile({this.strip, this.scaffoldKey, this.deleteFunc});
+  StripTile({this.strip, this.scaffoldKey, this.deleteFunc, this.refreshFunc});
 
   @override
   _StripTileState createState() => _StripTileState();
@@ -85,10 +86,14 @@ class _StripTileState extends State<StripTile> {
 
           bool turnedOff = result[1];
           result = result[0];
+
+
+          // always update the name
+          await updateSavedStripName(start_name, result.name);
+
           // Only change anything if the strip is on.
           if(!turnedOff)
             {
-              await updateSavedStrip(start_name, result);
               // Only apply the configuration if the configuration changed.
               if (!(start_conf_name == result.configuration.name)){
                 try
@@ -96,15 +101,15 @@ class _StripTileState extends State<StripTile> {
                   widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Sending new congiruation to ${widget.strip.name}.")));
                   await result.sendConfigurationToStrip();
                   widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("The configuration of ${widget.strip.name} has succesfully been sent. The strip might not update immediately.")));
+                  await updateSavedStrip(result.name, result);
                 }
                 catch(e)
                 {
                   widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Sending new configuration to ${widget.strip.name} failed. Is the strip connected to the wifi?")));
                 }
               }
-              setState(() {
-              });
             }
+            widget.refreshFunc();
           }
       ),
     );
@@ -211,8 +216,9 @@ class GroupTile extends StatefulWidget {
 
   Group group;
   Function deleteFunc;
+  Function refreshFunc;
   GlobalKey<ScaffoldState> scaffoldKey;
-  GroupTile({this.group, this.deleteFunc, this.scaffoldKey});
+  GroupTile({this.group, this.deleteFunc, this.scaffoldKey, this.refreshFunc});
 
   @override
   _GroupTileState createState() => _GroupTileState();
@@ -320,10 +326,14 @@ class _GroupTileState extends State<GroupTile> {
           dynamic result = await Navigator.pushNamed(context, '/group_control', arguments: {'group': widget.group, 'scaffoldKey':widget.scaffoldKey});
           bool turnedOff = result[1];
           result = result[0];
-          // Only change anything if the strip is on.
+
+          // Always update the name
+          await updateSavedGroupName(start_name, result.name);
+
+          // Only change anything if the group is on.
           if(!turnedOff)
             {
-              await updateSavedGroup(start_name, result);
+              await updateSavedGroup(result.name, result);
 
               if(!(start_conf_name == result.configuration.name))
                 {
@@ -341,10 +351,9 @@ class _GroupTileState extends State<GroupTile> {
                     }
                   }
                 }
-              setState((){
-              });
             }
-          }
+          widget.refreshFunc();
+        }
       )
     );
   }
