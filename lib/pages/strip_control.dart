@@ -159,6 +159,7 @@ class _StripControlState extends State<StripControl> {
                 try {
                   await strip.turnOff();
                   scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Off message sent to ${strip.name}.")));
+                  strip.turnOff();
                 }
                 catch (e) {
                   scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Couldn't send Off message to ${strip.name}.")));

@@ -22,6 +22,7 @@ Controller App for https://github.com/Ruud14/DIY-Wifi-LEDStrip-Controller
 
 ![Screens1](https://github.com/Ruud14/Wifi-LEDStrip-Controller-App/blob/master/pictures/Screens1.jpg)
 ![Screens2](https://github.com/Ruud14/Wifi-LEDStrip-Controller-App/blob/master/pictures/Screens2.jpg)
+![Screens3](https://github.com/Ruud14/Wifi-LEDStrip-Controller-App/blob/master/pictures/Screens3.jpg)
 
 
 ### Additional info.
