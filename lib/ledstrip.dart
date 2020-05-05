@@ -30,7 +30,10 @@ class LedStrip
   }
   void turnOff() async
   {
-    await this.sendMSG("off");
+    for(int i=0; i<3; i++) {
+      await this.sendMSG("off");
+      await Future.delayed(Duration(milliseconds: 1000));
+    }
   }
   void restart() async
   {

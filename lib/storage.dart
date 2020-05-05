@@ -90,6 +90,40 @@ void updateSavedStrip(String initialName, LedStrip newStrip) async
   await storage.replaceStripsFileContent(newStrips);
 }
 
+void updateSavedStripIP(String initialName, String newIP) async
+{
+  Storage storage  = Storage();
+  await storage.setup();
+  List<LedStrip> newStrips = [];
+  await storage.getGroups().then((savedGroups) async
+  {
+    for(int i=0; i < savedGroups.length; i++)
+    {
+      for(int x=0; x < savedGroups[i].strips.length; x++)
+      {
+        if(savedGroups[i].strips[x].name == initialName)
+        {
+          savedGroups[i].strips[x].ip = newIP;
+        }
+      }
+    }
+    await storage.replaceGroupsFileContent(savedGroups);
+  });
+  await storage.getStrips().then((savedStrips) {
+    for(int i=0; i < savedStrips.length; i++)
+    {
+      if(savedStrips[i].name == initialName)
+      {
+        savedStrips[i].ip = newIP;
+      }
+      newStrips.add(savedStrips[i]);
+    }
+  });
+  await storage.replaceStripsFileContent(newStrips);
+}
+
+
+
 // Update the name of a saved LedStrip object.
 void updateSavedStripName(String initialName, String newName) async
 {

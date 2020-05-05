@@ -76,11 +76,27 @@ class _StripControlState extends State<StripControl> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            SizedBox(height: 10,),
+            SizedBox(height: 15,),
             Container(
                 width: MediaQuery.of(context).size.width/2,
-                alignment: Alignment.center,
-                child: Text("IP: "+strip.ip, textAlign: TextAlign.center,)),
+                alignment: Alignment.bottomLeft,
+                child: Text("IP: ", textAlign: TextAlign.left,)),
+            Center(
+              child: Container(
+                width: MediaQuery.of(context).size.width/2,
+                child: TextFormField(
+                  initialValue: strip.ip,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(15),
+                  ],
+                  onChanged: (String value) {
+                    setState(() {
+                      strip.ip = value;
+                    });
+                  },
+                ),
+              ),
+            ),
             SizedBox(height: 30,),
             Container(
               width: MediaQuery.of(context).size.width/2,

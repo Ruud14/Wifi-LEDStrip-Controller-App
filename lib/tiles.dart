@@ -88,7 +88,8 @@ class _StripTileState extends State<StripTile> {
           result = result[0];
 
 
-          // always update the name
+          // always update the name and ip.
+          await updateSavedStripIP(start_name, result.ip);
           await updateSavedStripName(start_name, result.name);
 
           // Only change anything if the strip is on.
